@@ -5,8 +5,7 @@ import pandas as pd
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 
-from flask import Flask
-from flask import render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify
 from plotly.graph_objs import Bar
 from sklearn.externals import joblib
 from sqlalchemy import create_engine
@@ -25,26 +24,24 @@ def tokenize(text):
 
     return clean_tokens
 
-# load data
-engine = create_engine('sqlite:///../data/YourDatabaseName.db')
-df = pd.read_sql_table('YourTableName', engine)
+# Load data
+engine = create_engine('sqlite:///../data/DisasterResponse.db')
+df = pd.read_sql_table('DisasterResponse_table', engine)
 
-# load model
-model = joblib.load("../models/your_model_name.pkl")
+# Load model
+model = joblib.load("../models/classifier.pkl")
 
 
-# index webpage displays cool visuals and receives user input text for model
+# Index webpage displays cool visuals and receives user input text for model
 @app.route('/')
 @app.route('/index')
 def index():
     
-    # extract data needed for visuals
-    # TODO: Below is an example - modify to extract data for your own visuals
+    # Extract data needed for visuals
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
     
-    # create visuals
-    # TODO: Below is an example - modify to create your own visuals
+    # Create visuals
     graphs = [
         {
             'data': [
@@ -53,7 +50,6 @@ def index():
                     y=genre_counts
                 )
             ],
-
             'layout': {
                 'title': 'Distribution of Message Genres',
                 'yaxis': {
@@ -66,25 +62,25 @@ def index():
         }
     ]
     
-    # encode plotly graphs in JSON
+    # Encode plotly graphs in JSON
     ids = ["graph-{}".format(i) for i, _ in enumerate(graphs)]
     graphJSON = json.dumps(graphs, cls=plotly.utils.PlotlyJSONEncoder)
     
-    # render web page with plotly graphs
+    # Render web page with plotly graphs
     return render_template('master.html', ids=ids, graphJSON=graphJSON)
 
 
-# web page that handles user query and displays model results
+# Web page that handles user query and displays model results
 @app.route('/go')
 def go():
-    # save user input in query
+    # Save user input in query
     query = request.args.get('query', '') 
 
-    # use model to predict classification for query
+    # Use model to predict classification for query
     classification_labels = model.predict([query])[0]
     classification_results = dict(zip(df.columns[4:], classification_labels))
 
-    # This will render the go.html Please see that file. 
+    # This will render the go.html. Please see that file. 
     return render_template(
         'go.html',
         query=query,
